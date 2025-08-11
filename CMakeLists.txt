@@ -82,8 +82,8 @@ target_sources(CppUtils_Core
       FILES
         # Add all public header files.
         "${CMAKE_CURRENT_BINARY_DIR}/cpputils_core_export.h"
-        "${CppUtils_Core_SOURCE_DIR}/Source/Public/CppUtils.h"
-        "${CppUtils_Core_SOURCE_DIR}/Source/Public/CUConcepts.h"
+        "${CppUtils_Core_SOURCE_DIR}/Source/Public/CppUtils_Core.h"
+        "${CppUtils_Core_SOURCE_DIR}/Source/Public/CppUtils_Core_Concepts.h"
   PRIVATE
     FILE_SET cpputils_core_private_headers
       TYPE HEADERS
@@ -103,8 +103,8 @@ target_sources(CppUtils_Core
 # Add all source files.
 target_sources(CppUtils_Core
   PRIVATE
-    "${CppUtils_Core_SOURCE_DIR}/Source/Private/CppUtils.cpp"
-    "${CppUtils_Core_SOURCE_DIR}/Source/Private/CUConcepts.cpp"
+    "${CppUtils_Core_SOURCE_DIR}/Source/Private/CppUtils_Core.cpp"
+    "${CppUtils_Core_SOURCE_DIR}/Source/Private/CppUtils_Core_Concepts.cpp"
   )
 
 include(GNUInstallDirs)

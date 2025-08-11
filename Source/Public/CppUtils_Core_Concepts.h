@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <concepts>
 
-namespace CUConcepts
+namespace CppUtils::Core::Concepts
 {
     template <class T>
     concept Pointer = std::is_pointer_v<T>;
