@@ -1,1 +1,1 @@
-# CppUtils
+# CppCoreUtils
