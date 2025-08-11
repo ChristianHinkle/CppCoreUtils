@@ -2,10 +2,10 @@
 
 cmake_minimum_required(VERSION 3.24)
 
-project(CppUtils
+project(CppUtils_Core
   VERSION 0.1.0
   DESCRIPTION ""
-  HOMEPAGE_URL "https://github.com/ChristianHinko/CppUtils"
+  HOMEPAGE_URL "https://github.com/ChristianHinko/CppUtils_Core"
   LANGUAGES CXX
   )
 
@@ -17,7 +17,7 @@ project(CppUtils
 # something like "MeddySDK_DAM.lib" instead of just "DAM.lib" - because that would be super vague.
 #
 
-add_library(CppUtils)
+add_library(CppUtils_Core)
 
 #
 # Add alias targets.
@@ -34,27 +34,27 @@ add_library(CppUtils)
 # `FetchContent_Declare()`.
 #
 
-add_library(::CppUtils ALIAS CppUtils)
+add_library(CppUtils::Core ALIAS CppUtils_Core)
 
 # List out required language features.
-target_compile_features(CppUtils
+target_compile_features(CppUtils_Core
   PUBLIC
     cxx_std_20
   )
 
 # Generate cpp header file with export macros for our target.
 include(GenerateExportHeader)
-generate_export_header(CppUtils
+generate_export_header(CppUtils_Core
   # Set the export macro name to be in the "_API" format which is most-conventional. This
   # is important for compatibility with other build systems that may have this convention
   # hard-coded. E.g., Unreal Engine's build system.
-  EXPORT_MACRO_NAME CPPUTILS_API
+  EXPORT_MACRO_NAME CPPUTILS_CORE_API
   )
 
 # Precompile any CMake-specific headers so our source files can ommit those includes and
 # be built independently from CMake.
-target_precompile_headers(CppUtils
-  PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/cpputils_export.h"
+target_precompile_headers(CppUtils_Core
+  PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/cpputils_core_export.h"
   )
 
 #
@@ -70,22 +70,22 @@ target_precompile_headers(CppUtils
 #
 # A nice benefit of listing all header files is that they can be easily-discoverable by IDEs.
 #
-target_sources(CppUtils
+target_sources(CppUtils_Core
   PUBLIC
-    FILE_SET cpputils_public_headers
+    FILE_SET cpputils_core_public_headers
       TYPE HEADERS
       BASE_DIRS
         # Base directory of public headers.
-        "${CppUtils_SOURCE_DIR}/Source/Public"
+        "${CppUtils_Core_SOURCE_DIR}/Source/Public"
         # Base directory of generated headers.
         "${CMAKE_CURRENT_BINARY_DIR}"
       FILES
         # Add all public header files.
-        "${CMAKE_CURRENT_BINARY_DIR}/cpputils_export.h"
-        "${CppUtils_SOURCE_DIR}/Source/Public/CppUtils.h"
-        "${CppUtils_SOURCE_DIR}/Source/Public/CUConcepts.h"
+        "${CMAKE_CURRENT_BINARY_DIR}/cpputils_core_export.h"
+        "${CppUtils_Core_SOURCE_DIR}/Source/Public/CppUtils.h"
+        "${CppUtils_Core_SOURCE_DIR}/Source/Public/CUConcepts.h"
   PRIVATE
-    FILE_SET cpputils_private_headers
+    FILE_SET cpputils_core_private_headers
       TYPE HEADERS
       BASE_DIRS
         #
@@ -95,23 +95,23 @@ target_sources(CppUtils
         # cpp include statements, you have to type "Private/" to access the non-public headers. This
         # makes it obvious for programmers when a header shouldn't be included in public files.
         #
-        "${CppUtils_SOURCE_DIR}/Source"
+        "${CppUtils_Core_SOURCE_DIR}/Source"
       FILES
         # Add all private header files.
   )
 
 # Add all source files.
-target_sources(CppUtils
+target_sources(CppUtils_Core
   PRIVATE
-    "${CppUtils_SOURCE_DIR}/Source/Private/CppUtils.cpp"
-    "${CppUtils_SOURCE_DIR}/Source/Private/CUConcepts.cpp"
+    "${CppUtils_Core_SOURCE_DIR}/Source/Private/CppUtils.cpp"
+    "${CppUtils_Core_SOURCE_DIR}/Source/Private/CUConcepts.cpp"
   )
 
 include(GNUInstallDirs)
 
 # Associate our target with an export and set up installation.
-install(TARGETS CppUtils
-  EXPORT CppUtilsExport
+install(TARGETS CppUtils_Core
+  EXPORT CppUtils_CoreExport
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -124,30 +124,30 @@ install(TARGETS CppUtils
   # install interface users and build interface users. E.g., a user's include statements should work for
   # both packaged library usage and subproject library usage, without having to adapt their code to either use case.
   #
-  INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CppUtils"
+  INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CppUtils_Core"
   # Copy over public headers.
-  FILE_SET cpputils_public_headers DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CppUtils"
+  FILE_SET cpputils_core_public_headers DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CppUtils_Core"
   )
 
 # Generate script that imports targets associated with our export.
-install(EXPORT CppUtilsExport
-  FILE "CppUtilsExport.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/CppUtils"
+install(EXPORT CppUtils_CoreExport
+  FILE "CppUtils_CoreExport.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/CppUtils_Core"
   )
 
 # Create a package version file for our export.
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/CppUtilsConfigVersion.cmake"
-  VERSION ${CppUtils_VERSION}
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/CppUtils_CoreConfigVersion.cmake"
+  VERSION ${CppUtils_Core_VERSION}
   COMPATIBILITY SameMajorVersion
   )
 
 # Copy any files for downstream usage to the install directory.
 install(
   FILES
-    "${CppUtils_SOURCE_DIR}/CppUtilsConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/CppUtilsConfigVersion.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/CppUtils"
+    "${CppUtils_Core_SOURCE_DIR}/CppUtils_CoreConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/CppUtils_CoreConfigVersion.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/CppUtils_Core"
   )
 
 # Set some simple values for CPack based on this current project. The default
