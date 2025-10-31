@@ -3,7 +3,7 @@
 include(CMakeFindDependencyMacro)
 
 # Include our export. This imports all of our targets.
-include("${CMAKE_CURRENT_LIST_DIR}/CppUtils_CoreExport.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/CppCoreUtilsExport.cmake")
 
 #
 # Add alias targets whose names match those from the project file.
@@ -12,4 +12,4 @@ include("${CMAKE_CURRENT_LIST_DIR}/CppUtils_CoreExport.cmake")
 # interface users can use `OVERRIDE_FIND_PACKAGE` with `FetchContent_Declare()`.
 #
 
-add_library(CppUtils::Core ALIAS CppUtils_Core)
+add_library(::CppCoreUtils ALIAS CppCoreUtils)
