@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CppCoreUtils_Concepts.h"
+#include <CppCoreUtils/CppCoreUtils_Concepts.h>
 
 namespace CppCoreUtils
 {

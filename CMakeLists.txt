@@ -1,153 +1,104 @@
 # Copyright (c) 2023-2025 Christian Hinkle, Brian Hinkle.
 
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 4.0)
 
-project(CppCoreUtils
+# Write out the main project name here, in one place, to make renaming easier. This is mainly used by our
+# boilerplate code. There may be other mentions of the project's name mixed in certain places of this file, so
+# don't rely on these variables alone for renaming.
+SET(MY_BASE_PROJECT_NAME_FULL "CppCoreUtils")
+string(TOLOWER ${MY_BASE_PROJECT_NAME_FULL} MY_BASE_PROJECT_NAME_FULL_LOWERCASE)
+string(TOUPPER ${MY_BASE_PROJECT_NAME_FULL} MY_BASE_PROJECT_NAME_FULL_UPPERCASE)
+SET(MY_BASE_PROJECT_NAME_NAMESPACE "")
+SET(MY_BASE_PROJECT_NAME_LEAFNAME "CppCoreUtils")
+
+project(${MY_BASE_PROJECT_NAME_FULL}
   VERSION 0.1.0
   DESCRIPTION ""
-  HOMEPAGE_URL "https://github.com/ChristianHinko/CppCoreUtils"
+  HOMEPAGE_URL "https://github.com/ChristianHinkle/CppCoreUtils"
   LANGUAGES CXX
   )
 
-#
-# Add targets.
-#
-# We namespace target names using underscore characters "_". Not namespacing your target names can result in their
-# file names not be specific enough. E.g., for the DAM library of MeddySDK, we want its library file to be named
-# something like "MeddySDK_DAM.lib" instead of just "DAM.lib" - because that would be super vague.
-#
+# Tell CMake where our cmake scripts ("modules") are.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/GeneralCMakeModules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/GeneralCMakeModules/CPack")
 
-add_library(CppCoreUtils)
+# Set up testing. Defines `BUILD_TESTING` which is ON by default. This must be called by the top-level project only.
+if(PROJECT_IS_TOP_LEVEL)
+  include(CTest)
+endif()
 
-#
-# Add alias targets.
-#
-# We name these with special characters that filenames can't have. We use these aliases instead of the direct
-# target names where possible so that they can't be be interpreted as filenames.
-#
-# It's conventional to use "::" in these names, like namespaces. If a target doesn't have anything to namespace in its
-# name then just prepend "::" to it, analogous to how we indicate global scope in cpp.
-#
-# The aliases set up here get used by build interface users. Make sure the same aliases are also set up for install
-# interface users somewhere else. We do that in the export's config file. It's important to make sure the names are
-# the same in both cases for consistency. Namely, so that build interface users can use `OVERRIDE_FIND_PACKAGE` with
-# `FetchContent_Declare()`.
-#
-
-add_library(::CppCoreUtils ALIAS CppCoreUtils)
-
-# List out required language features.
-target_compile_features(CppCoreUtils
-  PUBLIC
-    cxx_std_20
-  )
-
-# Generate cpp header file with export macros for our target.
-include(GenerateExportHeader)
-generate_export_header(CppCoreUtils
-  # Set the export macro name to be in the "_API" format which is most-conventional. This
-  # is important for compatibility with other build systems that may have this convention
-  # hard-coded. E.g., Unreal Engine's build system.
-  EXPORT_MACRO_NAME CPPCOREUTILS_API
-  )
-
-# Precompile any CMake-specific headers so our source files can ommit those includes and
-# be built independently from CMake.
-target_precompile_headers(CppCoreUtils
-  PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/cppcoreutils_export.h"
-  )
-
-#
-# Add all header files and set up their include directories.
-#
-# The `BASE_DIRS` of file sets automatically get added to the target's include
-# directories. So we don't use the `target_include_directories()` command anymore
-# because that would be redundant.
-#
-# The file set of public headers is important because we use it to install
-# them for install interface users. It's very important to list out all public headers
-# in this file set so that install interface users have them.
-#
-# A nice benefit of listing all header files is that they can be easily-discoverable by IDEs.
-#
-target_sources(CppCoreUtils
-  PUBLIC
-    FILE_SET cppcoreutils_public_headers
-      TYPE HEADERS
-      BASE_DIRS
-        # Base directory of public headers.
-        "${CppCoreUtils_SOURCE_DIR}/Source/Public"
-        # Base directory of generated headers.
-        "${CMAKE_CURRENT_BINARY_DIR}"
-      FILES
-        # Add all public header files.
-        "${CMAKE_CURRENT_BINARY_DIR}/cppcoreutils_export.h"
-        "${CppCoreUtils_SOURCE_DIR}/Source/Public/CppCoreUtils.h"
-        "${CppCoreUtils_SOURCE_DIR}/Source/Public/CppCoreUtils_Concepts.h"
-  PRIVATE
-    FILE_SET cppcoreutils_private_headers
-      TYPE HEADERS
-      BASE_DIRS
-        #
-        # Base directory of private headers.
-        #
-        # It's nice to leave the "Private" directory out of this base include path so that, for
-        # cpp include statements, you have to type "Private/" to access the non-public headers. This
-        # makes it obvious for programmers when a header shouldn't be included in public files.
-        #
-        "${CppCoreUtils_SOURCE_DIR}/Source"
-      FILES
-        # Add all private header files.
-  )
-
-# Add all source files.
-target_sources(CppCoreUtils
-  PRIVATE
-    "${CppCoreUtils_SOURCE_DIR}/Source/Private/CppCoreUtils.cpp"
-    "${CppCoreUtils_SOURCE_DIR}/Source/Private/CppCoreUtils_Concepts.cpp"
-  )
-
+include(FetchContent)
 include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-# Associate our target with an export and set up installation.
-install(TARGETS CppCoreUtils
-  EXPORT CppCoreUtilsExport
-  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-  #
-  # Add to interface include directories.
-  #
-  # Note: We take care of install-specific include directories here instead of `target_include_directories()`.
-  #
-  # Note: It's important to make sure cpp include statements of public headers are compatible between
-  # install interface users and build interface users. E.g., a user's include statements should work for
-  # both packaged library usage and subproject library usage, without having to adapt their code to either use case.
-  #
-  INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CppCoreUtils"
-  # Copy over public headers.
-  FILE_SET cppcoreutils_public_headers DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/CppCoreUtils"
+# Declare subprojects.
+
+FetchContent_Declare(${MY_BASE_PROJECT_NAME_FULL}_Include
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Include"
   )
+
+FetchContent_Declare(${MY_BASE_PROJECT_NAME_FULL}_Source
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Source"
+  )
+
+FetchContent_Declare(${MY_BASE_PROJECT_NAME_FULL}_Static
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Static"
+  )
+
+FetchContent_Declare(${MY_BASE_PROJECT_NAME_FULL}_Shared
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Shared"
+  )
+
+FetchContent_Declare(${MY_BASE_PROJECT_NAME_FULL}_Module
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Module"
+  )
+
+FetchContent_Declare(${MY_BASE_PROJECT_NAME_FULL}_Object
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Object"
+  )
+
+if(BUILD_TESTING)
+  FetchContent_Declare(${MY_BASE_PROJECT_NAME_FULL}_Tests
+    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Tests"
+    )
+endif()
+
+# Add subprojects.
+
+FetchContent_MakeAvailable(${MY_BASE_PROJECT_NAME_FULL}_Include)
+
+FetchContent_MakeAvailable(${MY_BASE_PROJECT_NAME_FULL}_Source)
+
+FetchContent_MakeAvailable(${MY_BASE_PROJECT_NAME_FULL}_Static)
+
+FetchContent_MakeAvailable(${MY_BASE_PROJECT_NAME_FULL}_Shared)
+
+FetchContent_MakeAvailable(${MY_BASE_PROJECT_NAME_FULL}_Module)
+
+FetchContent_MakeAvailable(${MY_BASE_PROJECT_NAME_FULL}_Object)
+
+if(BUILD_TESTING)
+  FetchContent_MakeAvailable(${MY_BASE_PROJECT_NAME_FULL}_Tests)
+endif()
 
 # Generate script that imports targets associated with our export.
-install(EXPORT CppCoreUtilsExport
-  FILE "CppCoreUtilsExport.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/CppCoreUtils"
+install(EXPORT "${PROJECT_NAME}Export"
+  FILE "${PROJECT_NAME}Export.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
   )
 
 # Create a package version file for our export.
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/CppCoreUtilsConfigVersion.cmake"
-  VERSION ${CppCoreUtils_VERSION}
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
   COMPATIBILITY SameMajorVersion
   )
 
 # Copy any files for downstream usage to the install directory.
 install(
   FILES
-    "${CppCoreUtils_SOURCE_DIR}/CppCoreUtilsConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/CppCoreUtilsConfigVersion.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/CppCoreUtils"
+    "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
   )
 
 # Set some simple values for CPack based on this current project. The default
@@ -161,10 +112,32 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
 set(CPACK_PACKAGE_HOMEPAGE_URL "${PROJECT_HOMEPAGE_URL}")
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_BINARY_DIR};${PROJECT_NAME};ALL;/")
 
-# Output the generated CPack configs in a directory specific to this project. This is
+# Tell CMake to output the generated CPack configs in a directory specific to this project. This is
 # nice so we can generate our own config without conflicting with other projects.
 set(CPACK_OUTPUT_CONFIG_FILE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/CPackConfig.cmake")
 set(CPACK_SOURCE_OUTPUT_CONFIG_FILE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/CPackSourceConfig.cmake")
+
+#
+# Use NSIS' feature for appending our binary directory to the PATH environment
+# variable.
+#
+# Important: Make sure you modify your NSIS installation with the files from the "strlen_8192" version before
+# running CPack! Or else the installer will fail to modify the PATH env var for most users, because
+# variables in NSIS cannot exceed 1024 characters by default, and PATH env vars tend to be very lengthy.
+#
+# See our custom NSIS template where we make sure the "PATH" environment variable is
+# modified by default: "CMake/Modules/CPack/NSIS.InstallOptions.ini.in".
+#
+# TODO: I would like to have this functionality for other generators as well, but I
+# can't seem to find a generator-agnostic solution to this. E.g., in CMake's source
+# code, they re-implement this feature specifically for their WIX generator. I believe this
+# kind of per-generator implementation would be the "correct" way. Alternatively, it might
+# be possible to invoke a script that sets the env var manually after the generator finishes
+# installation of the package, but I would want to be transparent about that and give the
+# user control over that behavior; not to mention, it would also have to do the opposite
+# on uninstall.
+#
+set(CPACK_NSIS_MODIFY_PATH "ON")
 
 # Generate a CPackConfig.cmake file for this project.
 include(CPack)
