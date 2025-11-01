@@ -99,7 +99,6 @@ block(SCOPE_FOR VARIABLES)
   set(MyTargetSources
     "${MY_BASE_PROJECT_NAME_FULL}_Export.cpp"
     "CppCoreUtils.cpp"
-    "CppCoreUtils_Concepts.cpp"
     )
 
   # Add source file paths for `BUILD_LOCAL_INTERFACE` users.
@@ -136,11 +135,14 @@ endblock()
 # even need to exist yet because CMake only validates the existence of targets at the end of the entire
 # configuration process.
 
+find_package(CppCoreConcepts CONFIG REQUIRED COMPONENTS Include)
+
 # Add dependencies to other targets. For imported targets, it's important to only depend on them if we
 # are BUILD_LOCAL_INTERFACE, because we don't want them to get mixed into our export.
 target_link_libraries(${MY_BASE_PROJECT_NAME_FULL}_Source
   INTERFACE
     $<BUILD_LOCAL_INTERFACE:${MY_BASE_PROJECT_NAME_NAMESPACE}::${MY_BASE_PROJECT_NAME_LEAFNAME}::Include>
+    $<BUILD_LOCAL_INTERFACE:::CppCoreConcepts::Include>
   )
 
 # Associate our targets with an export and specify how their files would be installed.
